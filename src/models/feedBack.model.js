@@ -14,6 +14,18 @@ const feedbackSchema = new Schema({
   photos: {
     type: String,
     default: null
+  },
+  likes: {
+    type: Number,
+    default : 0
+  },
+  dislikes: {
+    type: Number,
+    default : 0
+  },
+  replies: {
+    type: Schema.Types.ObjectId,
+    ref:'Comment'
   }
   
   },{ timestamps: true })
