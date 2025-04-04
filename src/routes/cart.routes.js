@@ -4,7 +4,8 @@ import {
   addProductToCart,
   getCartProducts,
   removeProductFromCart,
-  clearCart
+  clearCart,
+  updateProductQuantity
 } from '../controllers/cart.controller.js';
  
 const router = Router()
@@ -17,5 +18,7 @@ router.route('/remove-product-from-cart/:productId').delete(verifyJWTAuth, remov
 router.route('/get-cart-products').get(verifyJWTAuth, getCartProducts)
 
 router.route('/clear-cart').delete(verifyJWTAuth, clearCart)
+
+router.route('/update-product-quantity/:productId').post(verifyJWTAuth, updateProductQuantity)
 
 export default router
