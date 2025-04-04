@@ -35,10 +35,16 @@ const userSchema = new Schema({
     type: String,
     default : 'Kathmandu, Anamnagar-13, SinghDurbar'
   },
-  product_category: [
+  product_categories: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref : 'Category'
+    }
+  ],
+  products: [
+    {
+      type: Schema.Types.ObjectId,
+      ref:'Product'
     }
   ],
   refreshToken: {
@@ -49,7 +55,7 @@ const userSchema = new Schema({
 
 //password hassing middleare
 userSchema.pre('save', async function (next) {
-  if (!this.isModified(password)) {
+  if (!this.isModified('password')) {
     return next()
   }
   this.password = await bcrypt.hash(this.password, 10)
@@ -58,7 +64,7 @@ userSchema.pre('save', async function (next) {
 
 
 //password checking method
-userSchema.methods.isPassowrdCorrect = async function (password) {
+userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password)
 }
 
@@ -66,7 +72,7 @@ userSchema.methods.isPassowrdCorrect = async function (password) {
 
 // acccessToken generation
 userSchema.methods.generateAccessToken = function () {
-  jwt.sign(
+  return jwt.sign(
     {
       _id: this._id,
       username: this.username,
@@ -81,7 +87,7 @@ userSchema.methods.generateAccessToken = function () {
 
 //refreshToken
 userSchema.methods.generateRefreshToken = function () {
-  jwt.sign(
+  return jwt.sign(
     {
       _id: this._id,
       username : this.username

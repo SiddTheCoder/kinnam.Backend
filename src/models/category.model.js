@@ -6,6 +6,10 @@ const categorySchema = new Schema({
     required: true,
     unique : true
   },
+  owner: {
+     type: mongoose.Schema.Types.ObjectId,
+    ref : 'User' 
+  },
   products: [
     {
     type: mongoose.Schema.Types.ObjectId,

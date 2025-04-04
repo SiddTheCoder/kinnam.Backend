@@ -12,7 +12,7 @@ const productSchema = new Schema({
   },
   category: {
     type: mongoose.Schema.Types.ObjectId,
-    ref : 'Product'
+    ref : 'Category'
   },
   specifications: {
     type: Array,
@@ -24,7 +24,7 @@ const productSchema = new Schema({
   },
   price: {
     type: Number,
-    default : 999
+    required : true
   },
   stock: {
     type: Number,
@@ -40,7 +40,7 @@ const productSchema = new Schema({
   },
   brand: {
     type: String,
-    defaul : 'CapsTab'
+    required : true
   },
   feedback: [
     {
@@ -52,6 +52,9 @@ const productSchema = new Schema({
     type: Number,
     default : 0
   },
+  
+  ratedData: [],
+  
   warrantyAvailable: {
     type: Boolean,
     default : true
