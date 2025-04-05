@@ -251,9 +251,37 @@ const getAllProducts = asyncHandler(async (req, res) => {
       user.products,
       'All Products Fetched Successfully'
   ))
-} )
+})
+
+const getProductById = asyncHandler(async (req, res) => {
+  const { productId } = req.params
+
+  if (!productId) {
+    throw new ApiError(400,'Product ID is required')
+  }
+
+  const product = await Product.findById(productId)
+    .populate('category', 'name')
+    .populate('owner', 'name email')
+    .populate('ratedData.user', 'name email') 
+    .populate('feedbacks', 'text photos likes dislikes')
+
+  if (!product) {
+    throw new ApiError(404,'Product with such ID didnt exist')
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(
+      200,
+      product,
+      'Product Fetched Successfully'
+  ))
+
+})
 
 export {
+  getProductById,
   uploadProduct,
   updateProductDetails,
   changeProductCategory,

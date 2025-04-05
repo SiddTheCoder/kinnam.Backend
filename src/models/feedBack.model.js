@@ -5,16 +5,23 @@ const feedbackSchema = new Schema({
     type: String,
     required: true,
   },
+  productId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Product',
+    required: true
+  },
   feedbacker: [
     {
     type: mongoose.Schema.Types.ObjectId,
-    ref : 'Owner'
+    ref : 'User'
     }
   ],
-  photos: {
-    type: String,
-    default: null
-  },
+  photos: [
+    {
+      type: String,
+      default: null
+    }
+  ],
   likes: {
     type: Number,
     default : 0
@@ -23,10 +30,12 @@ const feedbackSchema = new Schema({
     type: Number,
     default : 0
   },
-  replies: {
+  replies: [
+    {
     type: Schema.Types.ObjectId,
     ref:'Comment'
-  }
+    }
+  ]
   
   },{ timestamps: true })
 

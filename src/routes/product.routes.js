@@ -7,10 +7,14 @@ import {
   changeProductCategory,
   changeProductRating,
   getAllProducts,
+  getProductById
  } from "../controllers/product.controller.js";
 
 
 const router = Router()
+
+//public routes
+router.route('/get-product/:productId').get(getProductById)
 
 //secured routes
 router.route('/upload-product/:categoryId').post(

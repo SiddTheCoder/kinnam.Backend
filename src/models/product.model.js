@@ -42,7 +42,7 @@ const productSchema = new Schema({
     type: String,
     required : true
   },
-  feedback: [
+  feedbacks: [
     {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'FeedBack'

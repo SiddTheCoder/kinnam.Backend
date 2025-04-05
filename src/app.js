@@ -21,12 +21,16 @@ import userRouter from './routes/user.routes.js'
 import categoryRouter from './routes/category.routes.js'
 import productRouter from './routes/product.routes.js'
 import cartRouter from './routes/cart.routes.js'
+import feedbackRouter from './routes/feedback.routes.js'
+import commentRouter from './routes/comment.routes.js'
 
 //use routes
 app.use('/api/v1/u', userRouter)
 app.use('/api/v1/c',categoryRouter)
 app.use('/api/v1/product', productRouter)
 app.use('/api/v1/cart', cartRouter)
+app.use('/api/v1/feedback', feedbackRouter)
+app.use('/api/v1/comment', commentRouter)
 
 
 
