@@ -3,6 +3,7 @@ import { ApiError } from '../utils/ApiError.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
 import { User } from '../models/user.model.js'
 import { cookieOptions, emailRegex } from '../constant.js'
+import { uploadOnCloudinary } from '../utils/Cloudinary.js'
 
 const genrateRefreshAndAccessToken = async (userId) => {
  try {
@@ -15,6 +16,9 @@ const genrateRefreshAndAccessToken = async (userId) => {
  
    user.refreshToken = refreshToken
    await user.save({ validateBeforeSave: false })
+
+   res.cookie('refreshToken', refreshToken, cookieOptions)
+   res.cookie('accessToken', accessToken, cookieOptions)
    
    return { refreshToken, accessToken }
    
@@ -78,7 +82,7 @@ const registerUser = asyncHandler(async (req, res) => {
 })
 
 const loginUser = asyncHandler(async (req, res) => {
-   const { username, password, email } = req.body
+  const { username, password, email } = req.body
 
   if (!(username || email)) throw new ApiError(400,'Email or Username is required')
   if(!password) throw new ApiError(400,'Password is required')
@@ -99,18 +103,17 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const { accessToken, refreshToken } = await genrateRefreshAndAccessToken(user._id)
 
-
-  console.log('accessTpken' , accessToken)
-  console.log('accessTpken' , refreshToken)
-
   const loggedInUser = await User.findById(user._id).select('-password -refreshToken')
- 
 
+  if (!loggedInUser) {
+    throw new ApiError(500, 'Error Occured While Logging In User')
+  }
 
   return res
     .status(200)
     .cookie('accessToken', accessToken, cookieOptions)
     .cookie('refreshToken', refreshToken, cookieOptions)
+    .cookie('sellerId', loggedInUser?.sellerId, cookieOptions)
     .json(new ApiResponse(
       200,
       {
@@ -140,6 +143,7 @@ const logoutUser = asyncHandler(async (req, res) => {
     .status(200)
     .clearCookie('accessToken',options)
     .clearCookie('refreshToken', options)
+    .clearCookie('sellerId', options)
     .json(new ApiResponse(
       200,
       {},
@@ -158,10 +162,143 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     ))
 })
 
+const deleteUser = asyncHandler(async (req, res) => {
+  const deletedUser = await User.findByIdAndDelete(req.user._id)
+  if (!deletedUser) {
+    throw new ApiError(404, 'User not found')
+  }
+})
+
+const updatePassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body
+
+  if (!oldPassword || !newPassword) {
+    throw new ApiError(400, 'All fields are required')
+  }
+
+  const user = await User.findById(req.user._id)
+
+  if (!user) {
+    throw new ApiError(404, 'User not found')
+  }
+
+  const isPasswordValid = await user.isPasswordCorrect(oldPassword)
+
+  if (!isPasswordValid) {
+    throw new ApiError(401, 'Old password is incorrect')
+  }
+
+  user.password = newPassword
+  await user.save()
+
+  return res.status(200).json(new ApiResponse(
+    200,
+    {},
+    'Password updated successfully'
+  ))
+
+}) 
+
+const updateUser = asyncHandler(async (req, res) => {
+  const { username, email, fullName , phone , website , bio } = req.body
+
+  if (!(username || email || fullName)) {
+    throw new ApiError(400, 'One field is required')
+  }
+
+  const avatarLocalPath = req?.file?.path
+  let avatarURL;
+  if (avatarLocalPath) {
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+    if (!avatar) {
+      throw new ApiError(500, 'Error occured while uploading avatar')
+    }
+    avatarURL = avatar?.url
+  }
+
+  const user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: {
+        username: username?.toLowerCase() || user?.username,
+        email: email?.toLowerCase(),
+        fullName : fullName || user?.fullName,
+        avatar: avatarURL || user?.avatar,
+        phone: phone || user?.phone,
+        website: website || user?.website,
+        bio: bio || user?.bio
+      }
+    },
+    { new: true }
+  ).select('-password -refreshToken')
+
+  if (!user) {
+    throw new ApiError(404, 'User not found')
+  }
+
+  return res.status(200).json(new ApiResponse(
+    200,
+    user,
+    'User updated successfully'
+  ))
+
+})
+
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const { refreshToken } = req.cookies
+
+  if (!refreshToken) {
+    throw new ApiError(401, 'Refresh token is required')
+  }
+
+  const user = await User.findOne({ refreshToken })
+
+  if (!user) {
+    throw new ApiError(401, 'Invalid refresh token')
+  }
+
+  const { accessToken } = await genrateRefreshAndAccessToken(user?._id)
+
+  return res
+    .status(200)
+    .cookie('accessToken', accessToken, cookieOptions)
+    .json(new ApiResponse(
+      200,
+      { accessToken },
+      'Access token refreshed successfully'
+    ))
+
+})
+
+const promoteUserToSeller = asyncHandler(async (req, res) => {
+  
+  const user = await User.findById(req.user?._id)
+
+  const sellerId = user?.promoteUserToSeller()
+
+  if (!sellerId) {
+    throw new ApiError(500, 'Error occured while promoting user to seller')
+  }
+  
+  user.sellerId = sellerId
+  await user.save({ validateBeforeSave: false })
+
+  return res.status(200).json(new ApiResponse(
+    200,
+    { sellerId : sellerId },
+    'User promoted to seller successfully'
+  ))
+
+})
 
 export {
   registerUser,
   loginUser,
   logoutUser,
-  getCurrentUser
+  getCurrentUser,
+  deleteUser,
+  updatePassword,
+  updateUser,
+  refreshAccessToken,
+  promoteUserToSeller
 }

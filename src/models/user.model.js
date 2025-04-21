@@ -35,6 +35,18 @@ const userSchema = new Schema({
     type: String,
     default : 'Kathmandu, Anamnagar-13, SinghDurbar'
   },
+  bio: {
+    type: String,
+    default: 'I am a software engineer'
+  },
+  website: {
+    type: String,
+    default : 'https://www.example.com'
+  },
+  phone: {
+    type: String,
+    default : null
+  },
   product_categories: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -49,6 +61,10 @@ const userSchema = new Schema({
   ],
   refreshToken: {
     type: String,
+  },
+  sellerId: {
+    type: String,
+    default : null
   }
 }, {timestamps : true})
 
@@ -97,6 +113,16 @@ userSchema.methods.generateRefreshToken = function () {
       expiresIn : process.env.REFRESH_TOKEN_EXPIRY
     }
   )
+}
+
+// sellerId generation ( Promote to seller)
+// this method will be called when a user is promoted to seller
+userSchema.methods.promoteUserToSeller = async function () {
+  if (!this.sellerId) {
+    this.sellerId = `seller_${this._id}`
+    await this.save()
+  }
+  return this.sellerId
 }
 
 export const User = mongoose.model('User',userSchema)

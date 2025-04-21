@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { verifyJWTAuth } from '../middlewares/auth.middleware.js'
 import { upload } from '../middlewares/multer.middleware.js'
+import { isSeller } from "../middlewares/isSeller.middleware.js";
 import {
   uploadProduct,
   updateProductDetails,
